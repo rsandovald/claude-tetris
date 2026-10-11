@@ -165,3 +165,90 @@ kbd {
 #restart-btn:hover {
   background: #9bbdff;
 }
+
+/* ---- RECORDS: inicio ---- */
+.name-form.hidden {
+  display: none;
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #ffd54f;
+}
+
+.name-row {
+  display: flex;
+  gap: 6px;
+}
+
+#name-input {
+  width: 130px;
+  background: #1a1a25;
+  color: #e0e0e0;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  user-select: text;
+}
+
+#name-save-btn,
+#reset-records-btn {
+  background: #22223a;
+  color: #e0e0e0;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#name-save-btn:hover,
+#reset-records-btn:hover {
+  background: #2e2e4e;
+}
+
+.records-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  min-width: 220px;
+}
+
+.records-list {
+  list-style: none;
+  width: 100%;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+}
+
+.records-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #aab;
+}
+
+.records-list li.empty {
+  color: #555570;
+  justify-content: center;
+}
+
+.records-list li.highlight {
+  background: rgba(255, 213, 79, 0.18);
+  color: #ffd54f;
+  font-weight: 700;
+}
+
+.records-extra {
+  font-size: 11px;
+  color: #888;
+}
+/* ---- RECORDS: fin ---- */
