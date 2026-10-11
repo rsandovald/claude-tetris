@@ -205,6 +205,7 @@ const SKINS = {
   pastel: {
     name: 'Pastel',
     palette: [null, '#a8e6ef', '#fff1b8', '#d9b8f0', '#b8e8c0', '#f5b8b8', '#b8c4f0', '#ffd8b0'],
+    ghostBoost: 2.5,
     bg: '#fdf6ee',
     grid: '#efe6da',
     draw(context, px, py, color, size) {
@@ -276,7 +277,7 @@ function initSkinSelector() {
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
   context.save();
-  context.globalAlpha = alpha ?? 1;
+  context.globalAlpha = Math.min(1, (alpha ?? 1) * (alpha < 1 ? (currentSkin.ghostBoost || 1) : 1));
   currentSkin.draw(context, x * size, y * size, currentSkin.palette[colorIndex], size);
   context.restore();
 }
@@ -388,6 +389,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
+  if (e.target && e.target.id === 'skin-select') return; // no robar teclas al selector
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
