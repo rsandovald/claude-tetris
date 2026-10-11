@@ -40,7 +40,13 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 
+let startLevel = 1; // elegido en el menú para la próxima partida
+let baseLevel = 1;  // nivel inicial de la partida en curso
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+
+function intervalForLevel(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -106,8 +112,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = baseLevel + Math.floor(lines / 10);
+    dropInterval = intervalForLevel(level);
     updateHUD();
   }
 }
@@ -223,7 +229,9 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  hidePauseMenu();
   overlay.classList.remove('hidden');
+  restartBtn.focus();
 }
 
 function togglePause() {
@@ -231,12 +239,14 @@ function togglePause() {
   paused = !paused;
   if (!paused) {
     lastTime = performance.now();
-    loop(lastTime);
+    dropAccum = 0;
+    hidePauseMenu();
+    overlay.classList.add('hidden');
+    cancelAnimationFrame(animId);
+    animId = requestAnimationFrame(loop);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    showPauseMenu();
   }
 }
 
@@ -260,23 +270,37 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  baseLevel = startLevel;
+  level = baseLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = intervalForLevel(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
+  hidePauseMenu();
   overlay.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    // Escape dentro del select solo cierra el desplegable
+    if (!e.repeat && !(e.code === 'Escape' && e.target === startLevelSel)) togglePause();
+    return;
+  }
+  if (paused) {
+    // Menú abierto: bloquear teclas de juego (el select conserva sus flechas)
+    const onControl = e.target === startLevelSel || (e.code === 'Space' && e.target.tagName === 'BUTTON');
+    if (!onControl && ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+      e.preventDefault();
+    }
+    return;
+  }
+  if (gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -300,5 +324,41 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+// ---- Menú de pausa ----
+const pauseMenu = document.getElementById('pause-menu');
+const pauseControls = document.getElementById('pause-controls');
+const controlsBtn = document.getElementById('controls-btn');
+const startLevelSel = document.getElementById('start-level');
+
+for (let i = 1; i <= 15; i++) startLevelSel.add(new Option(i, i));
+
+function showPauseMenu() {
+  overlayTitle.textContent = 'PAUSA';
+  overlayScore.textContent = '';
+  restartBtn.hidden = true;
+  pauseMenu.hidden = false;
+  startLevelSel.value = startLevel;
+  overlay.classList.remove('hidden');
+  document.getElementById('resume-btn').focus();
+}
+
+function hidePauseMenu() {
+  pauseMenu.hidden = true;
+  restartBtn.hidden = false;
+  pauseControls.hidden = true;
+  controlsBtn.setAttribute('aria-expanded', 'false');
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+}
+
+document.getElementById('resume-btn').addEventListener('click', togglePause);
+document.getElementById('pause-restart-btn').addEventListener('click', init);
+controlsBtn.addEventListener('click', () => {
+  pauseControls.hidden = !pauseControls.hidden;
+  controlsBtn.setAttribute('aria-expanded', String(!pauseControls.hidden));
+});
+startLevelSel.addEventListener('change', () => {
+  startLevel = parseInt(startLevelSel.value, 10) || 1;
+});
 
 init();
